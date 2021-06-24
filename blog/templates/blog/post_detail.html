@@ -1,0 +1,83 @@
+{% extends "blog/base.html" %}
+{% block content %}
+    <article class="media content-section">
+        <img class="rounded-circle article-img" src="{{ object.author.profile.image.url }}">
+        <div class="media-body">
+            <div class="article-metadata">
+                <a class="mr-2" href="{% url 'user-posts' post.author.username %}">{{ object.author }}</a>
+                <small class="text-muted">{{ object.date_posted|date:"F d, Y, P" }}</small>
+                <small> - {{ total_likes }} likes</small>
+                {% if object.author == user %}
+                    <div>
+                        <a class="btn btn-secondary btn-sm mt-1 mb-1" href="{% url 'post-update' object.id %}">Edit</a>
+                        <a class="btn btn-danger btn-sm mt-1 mb-1" href="{% url 'post-delete' object.id %}">Delete</a>
+                    </div>
+                {% endif %}
+            </div>
+            <h2 class="article-title">{{ object.title }}</h2>
+            <p class="article-content">{{ object.content }}</p>
+        </div>
+    </article>
+    <form action="{% url 'like-post' post.pk %}" method="POST">
+        {% if user.is_authenticated %}
+        {% csrf_token %}
+        {% if liked %}
+            <button type="submit", name="post_id", value="{{ post.id }}", class="btn btn-primary">
+            {{ total_likes }} Unlike
+            </button>
+        {% else %}
+            <button type="submit", name="post_id", value="{{ post.id }}", class="btn btn-primary">
+                {{ total_likes }} Like
+            </button>
+        {% endif %}
+        {% endif %}
+    </form>
+    <hr>
+    <script type="text/javascript">
+        function Copy()
+        {
+            var Url = document.getElementById("paste-box");
+            Url.value = window.location.href;
+            Url.focus();
+            Url.select();
+            document.execCommand("Copy");
+        }
+    </script>
+    <div class="container">
+        <a class="btn btn-dark" href="{% url 'post-comment' object.id %}">Add Comment</a>
+        <button class="btn btn-success" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            Share
+        </button>
+        <div class="dropdown-menu"  aria-labelledby="dropdownMenuButton" >
+            <input class="btn btn-secondary btn-sm" style="margin-left:10px; margin-bottom:5px;" type="button" value="Copy Url" onclick="Copy();" />
+            <br>
+            <textarea style="margin-left:10px; margin-right:10px;" id="paste-box" rows="1" cols="40"></textarea>
+        </div>
+    </div>
+    <hr>
+    <h2 class="article-title mb-3" style="color: #262626"><b>Comments:</b></h2>
+    {% if not post.comments.all %}
+        <p class="article-content"><b>No comments yet</b></p>
+    {% else %}
+        {% for comment in post.comments.all %}
+            <article class="media content-section">
+                <img class="rounded-circle article-img" src="{{ comment.name.profile.image.url }}">
+                <div class="media-body">
+                    <div class="article-metadata">
+                        <a class="mr-2" href="{% url 'user-posts' comment.name %}">{{ comment.name }}</a>
+                        <small class="text-muted">{{ comment.created|date:"F d, Y, P" }}</small>
+                    </div>
+                    <p class="article-content">{{ comment.body }}</p>
+                </div>
+                {% if comment.name == user %}
+                    <form action = "{% url 'delete_comment' %}" method = "POST">
+                        {% csrf_token %}
+                        <input type="hidden" name="comment_id" value="{{ comment.id }}"/>
+                        <input type="hidden" name="post_id" value="{{ post.id }}"/>
+                        <button class="btn btn-danger btn-sm">Delete</button>
+                    </form>
+                {% endif %}
+            </article>
+        {% endfor %}
+    {% endif %}
+{% endblock content %}
